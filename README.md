@@ -8,7 +8,8 @@
 
 ### 1. Find the number of stores in each country.
 ```sql
-select country,count(store_id)
+select country,
+count(store_id)
 from stores
 group by 1
 order by 2 desc;
@@ -17,7 +18,9 @@ order by 2 desc;
 ### 2. Calculate the total number of units sold by each store.
 ```sql
 select 
-st.store_id,st.store_name,sum(sa.quantity) as quantity_sold
+st.store_id,
+st.store_name,
+sum(sa.quantity) as quantity_sold
 from sales as sa
 join stores as st
 on st.store_id = sa.store_id
@@ -38,25 +41,25 @@ and (extract(year from sale_date )) = 2023;
 select count(*) from stores 
 where store_id not in 
 (
-					select distinct s.store_id
-					from sales as s
-					right join warranty as w
-					on w.sale_id = s.sale_id
+select distinct s.store_id
+from sales as s
+right join warranty as w
+on w.sale_id = s.sale_id
 );
 ```
 
 ### 5. Calculate the percentage of warranty claims marked as "Warranty Void".
 ```sql
 select 
-round(count(claim_id)/
-				(select count(*) from warranty)::numeric * 100,2) as percentage
+round(count(claim_id)/(select count(*) from warranty)::numeric * 100,2) as percentage
 from warranty
 where repair_status = 'Warranty Void';
 ```
 
 ### 6. Identify which store had the highest total units sold in the last year.
 ```sql
-select store_id,sum(quantity)
+select store_id,
+sum(quantity)
 from sales
 where sale_date >= (CURRENT_DATE - INTERVAL '1 year')
 group by 1
@@ -72,7 +75,9 @@ where sale_date >= (CURRENT_DATE - INTERVAL '1 year');
 ```
 
 ### 8. Find the average price of products in each category.
-```sqlselect pr.category_id,ca.category_name,avg(pr.price)
+```sqlselect pr.category_id,
+ca.category_name,
+avg(pr.price)
 from products as pr
 join category as ca
 on pr.category_id = ca.category_id
@@ -90,7 +95,7 @@ where extract(year from claim_date) = 2020;
 ### 10. Identify the best-selling day for each store.
 ```sql
 with cte as 
-(	select st.store_id,
+( 	select st.store_id,
 	st.store_name,
 	To_CHAR(sa.sale_date,'Day') as sale_day_name,
 	sum(quantity) as quantity_sold,
@@ -107,19 +112,19 @@ where rank =1;
 ### 11. Identify the least selling product in each country for each year.
 ```sql
 with cte as (
-				select 
-				pr.product_id,
-				pr.product_name,
-				st.country,
-				extract(year from sa.sale_date) as sale_year,
-				sum(sa.quantity),
-				ROW_NUMBER() OVER (PARTITION BY st.country,	extract(year from sa.sale_date) ORDER BY sum(sa.quantity) asc) AS rank
-				from products as pr
-				join sales as sa
-				on sa.product_id = pr.product_id
-				join stores as st
-				on st.store_id = sa.store_id
-				group by 1,2,3,4
+select 
+pr.product_id,
+pr.product_name,
+st.country,
+extract(year from sa.sale_date) as sale_year,
+sum(sa.quantity),
+ROW_NUMBER() OVER (PARTITION BY st.country,	extract(year from sa.sale_date) ORDER BY sum(sa.quantity) asc) AS rank
+from products as pr
+join sales as sa
+on sa.product_id = pr.product_id
+join stores as st
+on st.store_id = sa.store_id
+group by 1,2,3,4
 	)
 select * from cte
 where rank = 1
@@ -183,15 +188,17 @@ order by 2 desc;
 ### 16. Determine the percentage chance of receiving warranty claims after each purchase for each country.
 ```sql
 with cte as
-(	select st.country, sum(s.quantity) as Total_unit_sold,count(w.claim_id) as total_claim
-	from sales as s
-	join stores as st
-	on st.store_id = s.store_id
-	left join warranty as w
-	on w.sale_id = s.sale_id
-	group by 1
+(select st.country, sum(s.quantity) as Total_unit_sold,count(w.claim_id) as total_claim
+from sales as s
+join stores as st
+on st.store_id = s.store_id
+left join warranty as w
+on w.sale_id = s.sale_id
+group by 1
 )
-select country,Total_unit_sold,total_claim,
+select country,
+Total_unit_sold,
+total_claim,
 round(COALESCE(total_claim ::numeric/Total_unit_sold ::numeric *100,0),2) as risk
 from cte
 order by 4 desc;
@@ -201,7 +208,7 @@ order by 4 desc;
 ```sql
 WITH cte AS (
     SELECT 
-        st.store_name AS st_name,
+	st.store_name AS st_name,
         EXTRACT(YEAR FROM sale_date) AS year,
         SUM(s.quantity * pr.price) AS Total_sales
     FROM sales AS s
